@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classroom Behavior Scorecard</title>
+    <link rel="stylesheet" href="scorecard.css">
+</head>
+<script type="module" src="scorelogic.js"></script>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Ms. Miranda's Camp</h1>
+            <p>Track positive and negative behaviors in real-time</p>
+        </header>
+
+        <div class="dashboard">
+            <div id="loading" class="loading">
+                Loading students...
+            </div>
+
+            <div id="studentsContainer" style="display: none;">
+                <div class="students-grid" id="studentsGrid">
+                    <!-- Student cards will be inserted here -->
+                </div>
+
+                <div class="add-student">
+                    <input type="text" id="newStudentName" placeholder="Enter student name">
+                    <button class="btn btn-primary" onclick="addStudent()">Add Student</button>
+                </div>
+            </div>
+
+            <div id="behaviorHistory" class="behavior-history" style="display: none;">
+        
+                <h3>Recent Behaviors</h3>
+
+                
+                <div class="history-controls">
+                    <button class="btn btn-small" onclick="filterBehaviors('all')">All</button>
+                    <button class="btn btn-small" onclick="filterBehaviors('today')">Today</button>
+                    <button class="btn btn-small" onclick="filterBehaviors('positive')">Positive Only</button>
+                    <button class="btn btn-small" onclick="filterBehaviors('negative')">Negative Only</button>
+                </div>
+                <div id="historyList">
+                    <!-- Behavior history will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</body>
+</html>

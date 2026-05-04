@@ -1,0 +1,195 @@
+        *{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+        }
+
+        body {
+            font-family: monospace;
+            background: linear-gradient(135deg, hsla(0, 0%, 100%, 0.384) 0%, #005b85 100%);
+            min-height: 100vh;
+            padding: 20px;
+            transition: background-color 0.3s ease;
+        }
+
+        /* Background flash effects */
+        body.flash-positive {
+            background-color: rgba(40, 167, 70, 0.9) !important;
+        }
+
+        body.flash-negative {
+            background-color: rgba(220, 53, 69, 0.9) !important;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(31, 255, 1, 0.151);
+            border-radius: 5px;
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+        }
+
+        header {
+            background: #206630da;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .dashboard {
+            padding: 30px;
+        }
+
+        .students-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .student-card {
+            background: #f8f9fa;
+            border: 3px solid #bfc1c2;
+            border-radius: 8px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .student-card:hover {
+            
+            transform: translateX(-5px);
+            box-shadow: 0 5px 15px rgba(0, 255, 128, 0.733);
+        }
+
+        .student-card.active {
+            border-color: #022852c0;
+            background: #e3f2fd;
+        }
+
+        .student-name {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .behavior-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 2px 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        .btn-positive {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-positive:hover {
+            background: #218838;
+            transform: scale(1.05);
+        }
+
+        .btn-delete {
+            background-color: #e3f2fd;
+            color: #000000;
+        }
+
+        .btn-delete:hover {
+            background-color: #dc3545;
+            color:white;
+
+        }
+
+        .btn-negative {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-negative:hover {
+            background: #c82333;
+            transform: scale(1.05);
+        }
+
+        .add-student {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .add-student input {
+            padding: 10px;
+            border: 2px solid #039c1d;
+            border-radius: 5px;
+            margin-right: 10px;
+            width: 200px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+        }
+
+        .behavior-history {
+            margin-top: 30px;
+            padding: 20px;
+            background: #256d77b6;
+            border-radius: 10px;
+            color: #ffffff;
+        }
+
+        .history-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 0.9em;
+            border-radius: 6px;
+        }
+
+        .behavior-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .behavior-item:last-child {
+            border-bottom: none;
+        }
+
+        .behavior-positive {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .behavior-negative {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .timestamp {
+            color: #ffffff;
+            font-size: 0.9em;
+        }
