@@ -32,6 +32,7 @@
         let students = [];
         let currentStudentId = null;
         let currentFilter = 'all'; // Track current filter
+        let behaviorCounts = {}; // map studentId -> net score (+1 for positive, -1 for negative)
 
         // Behavior types
         const behaviors = [
@@ -125,15 +126,16 @@
 
             const studentsGrid = document.getElementById('studentsGrid');
             studentsGrid.innerHTML = students.map(student => `
-                <div class="student-card ${currentStudentId === student.id ? 'active' : ''}" onclick="selectStudent('${student.id}')">
-                        <div class="student-name">
-                            ${student.name}
-                            <button class="btn btn-delete"
-                                    onclick="deleteStudent('${student.id}'); event.stopPropagation();">
-                                x
-                            </button>
-                            </div>
-                    <div class="behavior-buttons">
+                <div class="student-card ${currentStudentId === student.id ? 'active' : ''}" data-student-id="${student.id}" onclick="selectStudent('${student.id}')">
+                    <div class="student-name">
+                        <span class="student-name-label">${student.name}</span>
+                        <span style="display:flex;align-items:center;gap:8px;">
+                            
+                            <span class="student-count ${(student.score < 0) ? 'negative' : (student.score > 0) ? 'positive' : 'zero'}">${student.score}</span>
+                            <button class="btn btn-delete" onclick="deleteStudent('${student.id}'); event.stopPropagation();">x</button>
+                        </span>
+                    </div>
+                    <div class="behavior-buttons hidden" id="behaviors-${student.id}">
                         ${behaviors.map(behavior => `
                             <button class="btn btn-${behavior.type}"
                                     onclick="recordBehavior('${student.id}', '${behavior.name}'); event.stopPropagation();">
@@ -148,13 +150,41 @@
         // Select student
         function selectStudent(studentId) {
             currentStudentId = studentId;
-            renderDashboard();
+            // Manually update active class instead of rerendering
+            document.querySelectorAll('.student-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            const activeCard = document.querySelector(`[data-student-id="${studentId}"]`);
+            if (activeCard) {
+                activeCard.classList.add('active');
+            }
+            // Also open this card's behavior panel (accordion behavior)
+            toggleBehaviors(studentId);
+        }
+
+        // Toggle behavior buttons visibility
+        function toggleBehaviors(studentId) {
+            // Hide all behavior containers
+            document.querySelectorAll('.behavior-buttons').forEach(el => {
+                el.classList.add('hidden');
+            });
+            
+            // Show only the clicked card's behaviors
+            const behaviorContainer = document.getElementById(`behaviors-${studentId}`);
+            if (!behaviorContainer) return;
+            behaviorContainer.classList.remove('hidden');
+
+            // Trigger the one-time animation for a user-open action
+            behaviorContainer.classList.add('animate');
+            behaviorContainer.addEventListener('animationend', () => {
+                behaviorContainer.classList.remove('animate');
+            }, { once: true });
         }
 
         // Setup realtime updates for behavior history
         function setupRealtimeUpdates(filter = 'all') {
             currentFilter = filter;
-            let q = query(collection(db, 'behaviors'), orderBy('timestamp', 'desc'), limit(40));
+            let q = query(collection(db, 'behaviors'), orderBy('timestamp', 'desc'));
 
             // Apply filters
             if (filter === 'today') {
@@ -162,21 +192,42 @@
                 today.setHours(0, 0, 0, 0);
                 q = query(collection(db, 'behaviors'),
                     where('timestamp', '>=', today),
-                    orderBy('timestamp', 'desc'),
-                    limit(100));
+                    orderBy('timestamp', 'desc'));
             }
 
             onSnapshot(q, (querySnapshot) => {
+                // remember which behavior panels are currently open so we can restore them
+                const openBehaviorIds = Array.from(document.querySelectorAll('.behavior-buttons:not(.hidden)')).map(el => el.id);
+
                 const historyList = document.getElementById('historyList');
                 historyList.innerHTML = '';
 
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
+                // Build counts and render history. Use docs array so we can iterate twice.
+                const docs = querySnapshot.docs;
+                behaviorCounts = {};
+                docs.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    const student = students.find(s => s.id === data.studentId);
+                    const behavior = behaviors.find(b => b.name === data.behavior);
+                    if (!data || !data.studentId || !student || !behavior) return;
+                    if (filter === 'positive' && behavior.type !== 'positive') return;
+                    if (filter === 'negative' && behavior.type !== 'negative') return;
+                    const delta = behavior.type === 'positive' ? 1 : -1;
+                    behaviorCounts[data.studentId] = (behaviorCounts[data.studentId] || 0) + delta;
+                });
+
+                // Update each student object with their score
+                students.forEach((student) => {
+                    student.score = behaviorCounts[student.id] || 0;
+                });
+
+                // Now render history (apply filters client-side)
+                docs.forEach((docSnap) => {
+                    const data = docSnap.data();
                     const student = students.find(s => s.id === data.studentId);
                     const behavior = behaviors.find(b => b.name === data.behavior);
 
                     if (student && behavior) {
-                        // Apply client-side filters for positive/negative
                         if (filter === 'positive' && behavior.type !== 'positive') return;
                         if (filter === 'negative' && behavior.type !== 'negative') return;
 
@@ -193,6 +244,17 @@
                         historyList.appendChild(item);
                     }
                 });
+
+                // Update the student dashboard so counters appear next to names
+                renderDashboard();
+
+                // restore previously-open panels so UI doesn't collapse when snapshot updates
+                if (openBehaviorIds && openBehaviorIds.length) {
+                    openBehaviorIds.forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.classList.remove('hidden');
+                    });
+                }
             });
         }
 
@@ -281,3 +343,4 @@
         window.recordBehavior = recordBehavior;
         window.deleteStudent = deleteStudent;
         window.filterBehaviors = filterBehaviors;
+        window.toggleBehaviors = toggleBehaviors;

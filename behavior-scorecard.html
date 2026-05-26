@@ -15,6 +15,12 @@
             <p>Track positive and negative behaviors in real-time</p>
         </header>
 
+        
+                <div class="add-student">
+                    <input type="text" id="newStudentName" placeholder="Enter student name">
+                    <button class="btn btn-primary" onclick="addStudent()">Add Student</button>
+                </div>
+
         <div class="dashboard">
             <div id="loading" class="loading">
                 Loading students...
@@ -25,10 +31,6 @@
                     <!-- Student cards will be inserted here -->
                 </div>
 
-                <div class="add-student">
-                    <input type="text" id="newStudentName" placeholder="Enter student name">
-                    <button class="btn btn-primary" onclick="addStudent()">Add Student</button>
-                </div>
             </div>
 
             <div id="behaviorHistory" class="behavior-history" style="display: none;">
