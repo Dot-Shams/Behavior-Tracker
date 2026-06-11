@@ -1,4 +1,4 @@
-    //Firebase SDK 
+    //Firebase SDK to handshake with the Firebase module
         const firebaseConfig = {
             apiKey: "AIzaSyCe0FsT02jnf0zmxW58rqVl--IFZG3EzEo",
             authDomain: "class-behavior.firebaseapp.com",
@@ -9,7 +9,7 @@
             measurementId: "G-5QJP72E58S"
         };
 
-        // Initialize Firebase
+        // Initialize Firebase aka press start on accessing it and the database in question
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
         import {
         getFirestore,
@@ -25,10 +25,12 @@
         writeBatch,
         where
         } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+        import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
 
-        // Global variables
+        // Global variables 
         let students = [];
         let currentStudentId = null;
         let currentFilter = 'all'; // Track current filter
@@ -45,16 +47,66 @@
 
         // Initialize app when page loads
         document.addEventListener('DOMContentLoaded', () => {
-            loadStudents();
-            setupRealtimeUpdates();
+            initUI();
+
+            // Sign in anonymously so Firestore reads that require auth succeed.
+            signInAnonymously(auth).catch(err => {
+                console.error('Anonymous sign-in failed:', err);
+                const loading = document.getElementById('loading');
+                if (err && err.code === 'auth/configuration-not-found') {
+                    const projectId = (firebaseConfig && firebaseConfig.projectId) ? firebaseConfig.projectId : '';
+                    const consoleUrl = `https://console.firebase.google.com/project/${projectId}/authentication/providers`;
+                    if (loading) loading.textContent = 'Anonymous sign-in is disabled for this Firebase project. Enable it in Firebase Console: ' + consoleUrl;
+                } else if (loading) {
+                    loading.textContent = 'Anonymous sign-in failed. See console for details.';
+                }
+            });
+
+            // Initialize app features only after auth state is available
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    console.log('Signed in anonymously as', user.uid);
+                    loadStudents();
+                    setupRealtimeUpdates();
+                } else {
+                    console.warn('No authenticated user yet');
+                }
+            });
         });
+
+        // Wire up DOM controls (avoids inline onclick attributes)
+        function initUI() {
+            // Add student button (select the first matching .add-student .btn)
+            const addBtn = document.querySelector('.add-student .btn');
+            if (addBtn) addBtn.addEventListener('click', (e) => { e.preventDefault(); addStudent(); });
+
+            // Filter buttons (map button label to filter key)
+            const filterMap = {
+                'all': 'all',
+                'today': 'today',
+                'positive': 'positive',
+                'positive only': 'positive',
+                'negative': 'negative',
+                'negative only': 'negative'
+            };
+
+            document.querySelectorAll('.history-controls .btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const txt = (btn.textContent || '').trim().toLowerCase();
+                    const key = filterMap[txt] || 'all';
+                    filterBehaviors(key);
+                });
+            });
+        }
 
         // Load students from Firebase
         async function loadStudents() {
             try {
                 const querySnapshot = await getDocs(collection(db, 'students'));
+                console.log('loadStudents: fetched', querySnapshot.size, 'student docs');
                 students = [];
                 querySnapshot.forEach((doc) => {
+                    console.log('loadStudents: doc', doc.id, doc.data());
                     students.push({
                         id: doc.id,
                         ...doc.data()
@@ -120,31 +172,69 @@
 
         // Render the dashboard
         function renderDashboard() {
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('studentsContainer').style.display = 'block';
-            document.getElementById('behaviorHistory').style.display = 'block';
+            const loadingEl = document.getElementById('loading');
+            const studentsContainerEl = document.getElementById('studentsContainer');
+            const behaviorHistoryEl = document.getElementById('behaviorHistory');
+            if (loadingEl) loadingEl.style.display = 'none';
+            if (studentsContainerEl) studentsContainerEl.style.display = 'block';
+            if (behaviorHistoryEl) behaviorHistoryEl.style.display = 'block';
 
             const studentsGrid = document.getElementById('studentsGrid');
-            studentsGrid.innerHTML = students.map(student => `
-                <div class="student-card ${currentStudentId === student.id ? 'active' : ''}" data-student-id="${student.id}" onclick="selectStudent('${student.id}')">
-                    <div class="student-name">
-                        <span class="student-name-label">${student.name}</span>
-                        <span style="display:flex;align-items:center;gap:8px;">
-                            
-                            <span class="student-count ${(student.score < 0) ? 'negative' : (student.score > 0) ? 'positive' : 'zero'}">${student.score}</span>
-                            <button class="btn btn-delete" onclick="deleteStudent('${student.id}'); event.stopPropagation();">x</button>
-                        </span>
-                    </div>
-                    <div class="behavior-buttons hidden" id="behaviors-${student.id}">
-                        ${behaviors.map(behavior => `
-                            <button class="btn btn-${behavior.type}"
-                                    onclick="recordBehavior('${student.id}', '${behavior.name}'); event.stopPropagation();">
-                                ${behavior.name}
-                            </button>
-                        `).join('')}
-                    </div>
-                </div>
-            `).join('');
+            if (!studentsGrid) return;
+            studentsGrid.innerHTML = '';
+
+            students.forEach(student => {
+                const card = document.createElement('div');
+                card.className = 'student-card' + (currentStudentId === student.id ? ' active' : '');
+                card.dataset.studentId = student.id;
+                card.addEventListener('click', () => selectStudent(student.id));
+
+                const nameRow = document.createElement('div');
+                nameRow.className = 'student-name';
+
+                const nameLabel = document.createElement('span');
+                nameLabel.className = 'student-name-label';
+                nameLabel.textContent = student.name;
+
+                const controls = document.createElement('span');
+                controls.style.display = 'flex';
+                controls.style.alignItems = 'center';
+                controls.style.gap = '8px';
+
+                const count = document.createElement('span');
+                const score = student.score || 0;
+                const scoreClass = score < 0 ? 'negative' : (score > 0 ? 'positive' : 'zero');
+                count.className = 'student-count ' + scoreClass;
+                count.textContent = String(score);
+
+                const delBtn = document.createElement('button');
+                delBtn.className = 'btn btn-delete';
+                delBtn.textContent = 'x';
+                delBtn.addEventListener('click', (e) => { e.stopPropagation(); deleteStudent(student.id); });
+
+                controls.appendChild(count);
+                controls.appendChild(delBtn);
+
+                nameRow.appendChild(nameLabel);
+                nameRow.appendChild(controls);
+
+                card.appendChild(nameRow);
+
+                const behaviorContainer = document.createElement('div');
+                behaviorContainer.className = 'behavior-buttons hidden';
+                behaviorContainer.id = `behaviors-${student.id}`;
+
+                behaviors.forEach(behavior => {
+                    const b = document.createElement('button');
+                    b.className = 'btn ' + (behavior.type === 'positive' ? 'btn-positive' : 'btn-negative');
+                    b.textContent = behavior.name;
+                    b.addEventListener('click', (e) => { e.stopPropagation(); recordBehavior(student.id, behavior.name); });
+                    behaviorContainer.appendChild(b);
+                });
+
+                card.appendChild(behaviorContainer);
+                studentsGrid.appendChild(card);
+            });
         }
 
         // Select student
@@ -255,6 +345,10 @@
                         if (el) el.classList.remove('hidden');
                     });
                 }
+            }, (err) => {
+                console.error('Realtime snapshot error:', err);
+                const loading = document.getElementById('loading');
+                if (loading) loading.textContent = 'Realtime error: ' + (err && err.message ? err.message : String(err));
             });
         }
 
