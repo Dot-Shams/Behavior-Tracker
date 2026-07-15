@@ -26,7 +26,7 @@ header {
     background: #ffffff;
     color: #202124;
     padding: 20px;
-    text-align: left;
+    text-align: center;
     border-bottom: 1px solid #e5e5e5;
 }
 
@@ -143,7 +143,7 @@ h1 {
 }
 
 .add-student {
-    text-align: left;
+    text-align: center;
     margin-top: 20px;
 }
 
@@ -204,5 +204,13 @@ h1 {
     font-size: 0.9rem;
 }
 
-
-        
+.hidden {
+    display: none;
+}
+    
+#toggleHistory {
+    padding: 10px;
+    background-color: lightblue;
+    margin-top: 10px;
+    border-radius: 3px;
+}
