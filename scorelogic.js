@@ -35,6 +35,7 @@
         let currentStudentId = null;
         let currentFilter = 'all'; // Track current filter
         let behaviorCounts = {}; // map studentId -> net score (+1 for positive, -1 for negative)
+        let unsubscribeBehaviors = null;
 
         // Behavior types
         const behaviors = [
@@ -76,7 +77,7 @@
 
         // Wire up DOM controls (avoids inline onclick attributes)
         function initUI() {
-            // Add student button (select the first matching .add-student .btn)
+            // Add student button
             const addBtn = document.querySelector('.add-student .btn');
             if (addBtn) addBtn.addEventListener('click', (e) => { e.preventDefault(); addStudent(); });
 
@@ -91,12 +92,21 @@
             };
 
             document.querySelectorAll('.history-controls .btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
+                btn.addEventListener('click', () => {
                     const txt = (btn.textContent || '').trim().toLowerCase();
                     const key = filterMap[txt] || 'all';
                     filterBehaviors(key);
                 });
             });
+
+            const toggleHistoryBtn = document.getElementById('toggleHistory');
+            const historyList = document.getElementById('historyList');
+            if (toggleHistoryBtn && historyList) {
+                toggleHistoryBtn.addEventListener('click', () => {
+                    historyList.classList.toggle('hidden');
+                    toggleHistoryBtn.textContent = historyList.classList.contains('hidden') ? 'Expand' : 'Collapse';
+                });
+            }
         }
 
         // Load students from Firebase
@@ -274,9 +284,14 @@
         // Setup realtime updates for behavior history
         function setupRealtimeUpdates(filter = 'all') {
             currentFilter = filter;
+
+            if (unsubscribeBehaviors) {
+                unsubscribeBehaviors();
+                unsubscribeBehaviors = null;
+            }
+
             let q = query(collection(db, 'behaviors'), orderBy('timestamp', 'desc'));
 
-            // Apply filters
             if (filter === 'today') {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
@@ -285,7 +300,7 @@
                     orderBy('timestamp', 'desc'));
             }
 
-            onSnapshot(q, (querySnapshot) => {
+            unsubscribeBehaviors = onSnapshot(q, (querySnapshot) => {
                 // remember which behavior panels are currently open so we can restore them
                 const openBehaviorIds = Array.from(document.querySelectorAll('.behavior-buttons:not(.hidden)')).map(el => el.id);
 
@@ -427,9 +442,8 @@
                 console.error('Error deleting student:', error);
                 alert('Could not delete student. Check console.');
             }
+
         }
-
-
 
         // Make functions global so HTML can call them
         window.addStudent = addStudent;

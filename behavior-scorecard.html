@@ -18,36 +18,37 @@
         
                 <div class="add-student">
                     <input type="text" id="newStudentName" placeholder="Enter student name">
-                    <button class="btn btn-primary" onclick="addStudent()">Add Student</button>
+                    <button class="btn btn-primary">Add Student</button>
                 </div>
 
-        <div class="dashboard">
-            <div id="loading" class="loading">
-                Loading students...
-            </div>
-
-            <div id="studentsContainer" style="display: none;">
-                <div class="students-grid" id="studentsGrid">
-                    <!-- Student cards will be inserted here -->
+        <div class="dashboard split-layout">
+            <div class="students-panel">
+                <div id="loading" class="loading">
+                    Loading students...
                 </div>
 
+                <div id="studentsContainer" style="display: none;">
+                    <div class="students-grid" id="studentsGrid">
+                        <!-- Student cards will be inserted here -->
+                    </div>
+                </div>
             </div>
 
-            <div id="behaviorHistory" class="behavior-history" style="display: none;">
-        
-                <h3>Recent Behaviors</h3>
+            <aside id="behaviorHistory" class="behavior-history history-panel" style="display: none;">
+                <h2>Recent Behaviors</h2>
 
-                
                 <div class="history-controls">
-                    <button class="btn btn-small" onclick="filterBehaviors('all')">All</button>
-                    <button class="btn btn-small" onclick="filterBehaviors('today')">Today</button>
-                    <button class="btn btn-small" onclick="filterBehaviors('positive')">Positive Only</button>
-                    <button class="btn btn-small" onclick="filterBehaviors('negative')">Negative Only</button>
+                    <button class="btn btn-small">All</button>
+                    <button class="btn btn-small">Today</button>
+                    <button class="btn btn-small">Positive Only</button>
+                    <button class="btn btn-small">Negative Only</button>
                 </div>
+
+                <button id="toggleHistory">Expand</button>
                 <div id="historyList">
                     <!-- Behavior history will be inserted here -->
                 </div>
-            </div>
+            </aside>
         </div>
     </div>
 
