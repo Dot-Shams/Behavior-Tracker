@@ -115,3 +115,10 @@ This app is not magical. It is a simple pattern:
 - give instant feedback
 
 Once you understand that, the rest is just UI polish and data flow.
+
+
+
+where i'm leaving off is the addition of icons 9.19.26
+- added an icon folder
+    - will include svg icons preferably custom
+    - will include new logic into js script
