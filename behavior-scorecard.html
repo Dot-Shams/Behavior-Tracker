@@ -6,20 +6,18 @@
     <title>Classroom Behavior Scorecard</title>
     <link rel="stylesheet" href="scorecard.css">
 </head>
-<script type="module" src="scorelogic.js"></script>
 
 <body>
     <div class="container">
         <header>
-            <h1>Ms. Miranda's Camp</h1>
+            <h1>Teacher's Lil' Camp</h1>
             <p>Track positive and negative behaviors in real-time</p>
         </header>
 
-        
-                <div class="add-student">
-                    <input type="text" id="newStudentName" placeholder="Enter student name">
-                    <button class="btn btn-primary">Add Student</button>
-                </div>
+        <div class="add-student">
+            <input type="text" id="newStudentName" placeholder="Enter student name">
+            <button class="btn btn-primary" id="addStudentButton">Add Student</button>
+        </div>
 
         <div class="dashboard split-layout">
             <div class="students-panel">
@@ -38,10 +36,10 @@
                 <h2>Recent Behaviors</h2>
 
                 <div class="history-controls">
-                    <button class="btn btn-small">All</button>
-                    <button class="btn btn-small">Today</button>
-                    <button class="btn btn-small">Positive Only</button>
-                    <button class="btn btn-small">Negative Only</button>
+                    <button class="btn btn-small" data-filter="all">All</button>
+                    <button class="btn btn-small" data-filter="today">Today</button>
+                    <button class="btn btn-small" data-filter="positive">Positive Only</button>
+                    <button class="btn btn-small" data-filter="negative">Negative Only</button>
                 </div>
 
                 <button id="toggleHistory">Expand</button>
@@ -52,6 +50,6 @@
         </div>
     </div>
 
-
+    <script type="module" src="scorelogic.js"></script>
 </body>
 </html>
